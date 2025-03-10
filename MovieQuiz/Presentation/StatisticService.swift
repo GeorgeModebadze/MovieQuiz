@@ -55,7 +55,6 @@ final class StatisticService: StatisticServiceProtocol {
         let currentGame = GameResult(correct: count, total: amount, date: Date())
         if currentGame.isBetterThan(bestGame) {
             bestGame = currentGame
-            print("New best game saved: \(bestGame)")
         }
     }
 }
