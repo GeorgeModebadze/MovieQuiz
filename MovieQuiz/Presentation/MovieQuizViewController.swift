@@ -15,6 +15,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     private var alertPresenter: AlertPresenterProtocol?
     
+    private let statisticService: StatisticServiceProtocol = StatisticService()
+    
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -100,13 +102,23 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private func showNextQuestionOrResults() {
         imageView.layer.borderWidth = 0
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = correctAnswers == questionsAmount ?
-            "Поздравляем, вы ответили на 10 из 10!" :
-            "Вы ответили на \(correctAnswers) из 10, попробуйте ещё раз!"
+            statisticService.store(correct: correctAnswers, total: questionsAmount)
+            let gamesCount = statisticService.gamesCount
+            let bestGame = statisticService.bestGame
+            let totalAccuracy = statisticService.totalAccuracy
+            
+            let text = """
+            Ваш результат: \(correctAnswers)/\(questionsAmount)
+            Количество сыгранных квизов: \(gamesCount)
+            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+            Средняя точность: \(String(format: "%.2f", totalAccuracy))%
+            """
+            
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
                 text: text,
-                buttonText: "Сыграть ещё раз")
+                buttonText: "Сыграть ещё раз"
+            )
             show(quiz: viewModel)
         } else {
             currentQuestionIndex += 1
@@ -115,14 +127,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func show(quiz result: QuizResultsViewModel) {
-            guard let alertPresenter = alertPresenter else { return }
-            alertPresenter.presentAlert(on: self, with: result)
-        }
+        guard let alertPresenter = alertPresenter else { return }
+        alertPresenter.presentAlert(on: self, with: result)
+    }
     
     func didTapRestartGame() {
-            currentQuestionIndex = 0
-            correctAnswers = 0
-            
-            questionFactory?.requestNextQuestion()
-        }
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        
+        questionFactory?.requestNextQuestion()
+    }
 }
