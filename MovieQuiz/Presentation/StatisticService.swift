@@ -47,17 +47,12 @@ final class StatisticService: StatisticServiceProtocol {
     func store(correct count: Int, total amount: Int) {
         let totalCorrectAnswers = storage.integer(forKey: Keys.totalCorrectAnswers.rawValue) + count
         storage.set(totalCorrectAnswers, forKey: Keys.totalCorrectAnswers.rawValue)
-        print("Total correct answers saved: \(totalCorrectAnswers)")
         
         let totalQuestions = storage.integer(forKey: Keys.totalQuestions.rawValue) + amount
         storage.set(totalQuestions, forKey: Keys.totalQuestions.rawValue)
-        print("Total questions saved: \(totalQuestions)")
-        
         gamesCount += 1
-        print("Games count saved: \(gamesCount)")
         
         let currentGame = GameResult(correct: count, total: amount, date: Date())
-        
         if currentGame.isBetterThan(bestGame) {
             bestGame = currentGame
             print("New best game saved: \(bestGame)")

@@ -132,7 +132,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     func didTapRestartGame() {
         currentQuestionIndex = 0
         correctAnswers = 0
-        
         questionFactory?.requestNextQuestion()
     }
 }
