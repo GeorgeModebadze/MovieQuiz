@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 final class QuestionFactory: QuestionFactoryProtocol {
     
@@ -22,7 +23,7 @@ final class QuestionFactory: QuestionFactoryProtocol {
     func loadData() {
         moviesLoader.loadMovies { [weak self] result in
             DispatchQueue.main.async {
-                guard let self = self else { return }
+                guard let self else { return }
                 switch result {
                 case .success(let mostPopularMovies):
                     self.movies = mostPopularMovies.items
@@ -85,12 +86,20 @@ final class QuestionFactory: QuestionFactoryProtocol {
             
             guard let movie = self.movies[safe: index] else { return }
             
+            
             var imageData = Data()
             
             do {
                 imageData = try Data(contentsOf: movie.resizedImageURL)
             } catch {
                 print("Failed to load image")
+            }
+            
+            guard !imageData.isEmpty, let _ = UIImage(data: imageData) else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.delegate?.didFailToLoadData(with: (any Error).self as! Error)
+                }
+                return
             }
             
             let rating = Float(movie.rating) ?? 0
@@ -103,12 +112,9 @@ final class QuestionFactory: QuestionFactoryProtocol {
                                         correctAnswer: correctAnswer)
             
             DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
                 self.delegate?.didReceiveNextQuestion(question: question)
             }
         }
     }
-    
-    //    let question = questions[safe: index]
-    //    delegate?.didReceiveNextQuestion(question: question)
 }
