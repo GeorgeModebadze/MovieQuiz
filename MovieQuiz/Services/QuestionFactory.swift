@@ -95,13 +95,6 @@ final class QuestionFactory: QuestionFactoryProtocol {
                 print("Failed to load image")
             }
             
-            guard !imageData.isEmpty, let _ = UIImage(data: imageData) else {
-                DispatchQueue.main.async { [weak self] in
-                    self?.delegate?.didFailToLoadData(with: (any Error).self as! Error)
-                }
-                return
-            }
-            
             let rating = Float(movie.rating) ?? 0
             
             let text = "Рейтинг этого фильма больше чем 7?"
