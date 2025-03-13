@@ -2,24 +2,24 @@ import Foundation
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
+    private var statisticService: StatisticServiceProtocol!
     private var questionFactory: QuestionFactoryProtocol?
     private weak var viewController: MovieQuizViewController?
     
+    private var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
+    private var currentQuestionIndex: Int = 0
+    private var correctAnswers = 0
+    
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
+        
+        statisticService = StatisticService()
         
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
     }
-    
-    let questionsAmount: Int = 10
-    private var currentQuestionIndex: Int = 0
-    
-    var correctAnswers = 0
-    
-    private var statisticService: StatisticServiceProtocol = StatisticService()
-    var currentQuestion: QuizQuestion?
     
     func didLoadDataFromServer() {
         viewController?.hideLoadingIndicator()
@@ -42,7 +42,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
-    //    private var questionFactory: QuestionFactoryProtocol?
     
     func noButtonClicked() {
         didAnswer(isYes: false)
@@ -61,13 +60,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [ weak self ] in
             guard let self else { return }
-//            self.presenter.questionFactory = self.questionFactory
-            self.showNextQuestionOrResults()
+            self.proceedToNextQuestionOrResults()
             viewController?.resetBorder()
         }
     }
     
-    func didAnswer(isYes: Bool) {
+    private func didAnswer(isYes: Bool) {
         guard let currentQuestion else {
             return
         }
@@ -110,8 +108,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
     }
     
-    func showNextQuestionOrResults() {
-        //        imageView.layer.borderWidth = 0
+    private func proceedToNextQuestionOrResults() {
         if self.isLastQuestion() {
             statisticService.store(correct: correctAnswers, total: self.questionsAmount)
             let gamesCount = statisticService.gamesCount
