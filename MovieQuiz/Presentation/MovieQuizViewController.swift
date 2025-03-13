@@ -1,6 +1,9 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
+final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
+    func didTapRestartGame() {
+        presenter.restartGame()
+    }
     
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var textLabel: UILabel!
@@ -9,33 +12,33 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
 //    private var correctAnswers = 0
     
-    private var questionFactory: QuestionFactoryProtocol?
+//    private var questionFactory: QuestionFactoryProtocol?
 //    private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServiceProtocol = StatisticService()
-    private let presenter = MovieQuizPresenter()
+//    private let presenter = MovieQuizPresenter()
+    private var presenter: MovieQuizPresenter!
     
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        presenter.viewController = self
-        
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+//        presenter.viewController = self
+        presenter = MovieQuizPresenter(viewController: self)
+//        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         showLoadingIndicator()
-        questionFactory?.loadData()
+//        questionFactory?.loadData()
         alertPresenter = AlertPresenter()
         alertPresenter?.delegate = self
-        questionFactory?.requestNextQuestion()
+//        questionFactory?.requestNextQuestion()
         activityIndicator.hidesWhenStopped = true
     }
     
-    // MARK: - QuestionFactoryDelegate
     
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter.didReceiveNextQuestion(question: question)
-    }
+//    func didReceiveNextQuestion(question: QuizQuestion?) {
+//        presenter.didReceiveNextQuestion(question: question)
+//    }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
@@ -51,25 +54,32 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         counterLabel.text = step.questionNumber
     }
     
-    func showAnswerResult(isCorrect: Bool) {
-        
-        presenter.didAnswer(isYes: false)
-        
-        imageView.layer.masksToBounds = true
+    func resultFrame(isCorrect: Bool) {
+        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
         imageView.layer.borderWidth = 8
-        if isCorrect {
-            imageView.layer.borderColor = UIColor.ypGreen.cgColor
-            presenter.correctAnswers += 1
-        } else {
-            imageView.layer.borderColor = UIColor.ypRed.cgColor
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [ weak self ] in
-            guard let self else { return }
-            self.presenter.questionFactory = self.questionFactory
-            self.showNextQuestionOrResults()
-        }
     }
+    func resetBorder() {
+        imageView.layer.borderWidth = 0
+    }
+//    func showAnswerResult(isCorrect: Bool) {
+//        
+//        presenter.didAnswer(isYes: isCorrect)
+//        
+//        imageView.layer.masksToBounds = true
+//        imageView.layer.borderWidth = 8
+//        if isCorrect {
+//            imageView.layer.borderColor = UIColor.ypGreen.cgColor
+//            presenter.correctAnswers += 1
+//        } else {
+//            imageView.layer.borderColor = UIColor.ypRed.cgColor
+//        }
+//        
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [ weak self ] in
+//            guard let self else { return }
+////            self.presenter.questionFactory = self.questionFactory
+//            self.showNextQuestionOrResults()
+//        }
+//    }
     
     private func showNextQuestionOrResults() {
         imageView.layer.borderWidth = 0
@@ -94,7 +104,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             show(quiz: viewModel)
         } else {
             presenter.switchToNextQuestion()
-            self.questionFactory?.requestNextQuestion()
+//            self.questionFactory?.requestNextQuestion()
         }
     }
     
@@ -104,20 +114,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         self.presenter.restartGame()
     }
     
-    func didTapRestartGame() {
-        presenter.restartGame()
-        questionFactory?.requestNextQuestion()
-    }
+//    func didTapRestartGame() {
+//        presenter.restartGame()
+//        questionFactory?.requestNextQuestion()
+//    }
     
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
-    private func hideLoadingIndicator() {
+    func hideLoadingIndicator() {
         activityIndicator.stopAnimating()
     }
     
-    private func showNetworkError(message: String) {
+    func showNetworkError(message: String) {
         hideLoadingIndicator()
         
         let viewModel = AlertModel(
@@ -130,18 +140,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             
             self.presenter.restartGame()
             
-            self.questionFactory?.requestNextQuestion()
+//            self.questionFactory?.requestNextQuestion()
         }
         alertPresenter?.presentAlert(on: self, with: viewModel)
     }
+
+//    func didLoadDataFromServer() {
+//        activityIndicator.isHidden = true
+//        questionFactory?.requestNextQuestion()
+//    }
     
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
-        questionFactory?.requestNextQuestion()
-    }
-    
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
+//    func didFailToLoadData(with error: Error) {
+//        showNetworkError(message: error.localizedDescription)
+//    }
     
 }
