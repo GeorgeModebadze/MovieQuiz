@@ -10,7 +10,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private var correctAnswers = 0
     
     private var questionFactory: QuestionFactoryProtocol?
-    private var currentQuestion: QuizQuestion?
+//    private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticServiceProtocol = StatisticService()
     private let presenter = MovieQuizPresenter()
@@ -34,25 +34,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else {
-            return
-        }
-        
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
+        presenter.didReceiveNextQuestion(question: question)
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
-        presenter.yesButtonClicked()
+        presenter.noButtonClicked()
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked()
     }
     
@@ -74,6 +63,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [ weak self ] in
             guard let self else { return }
+            self.presenter.correctAnswers = self.correctAnswers
+            self.presenter.questionFactory = self.questionFactory
             self.showNextQuestionOrResults()
         }
     }
@@ -105,7 +96,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         }
     }
     
-    private func show(quiz result: QuizResultsViewModel) {
+    func show(quiz result: QuizResultsViewModel) {
         guard let alertPresenter else { return }
         alertPresenter.presentAlert(on: self, with: result)
         self.presenter.resetQuestionIndex()
