@@ -33,19 +33,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     // MARK: - QuestionFactoryDelegate
     
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else {
-            return
-        }
-        
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
-    }
-    
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked()
@@ -56,7 +43,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         presenter.yesButtonClicked()
     }
     
-    private func show(quiz step: QuizStepViewModel) {
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        presenter.didReceiveNextQuestion(question: question)
+    }
+    
+    func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
@@ -74,35 +65,37 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [ weak self ] in
             guard let self else { return }
-            self.showNextQuestionOrResults()
+//            self.presenter.correctAnswer = self.correctAnswers
+            self.presenter.questionFactory = self.questionFactory
+            self.presenter.showNextQuestionOrResults()
         }
     }
     
-    private func showNextQuestionOrResults() {
+    func showNextQuestionOrResults() {
         imageView.layer.borderWidth = 0
-        if presenter.isLastQuestion() {
-            statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
-            let gamesCount = statisticService.gamesCount
-            let bestGame = statisticService.bestGame
-            let totalAccuracy = statisticService.totalAccuracy
-            
-            let text = """
-            Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
-            Количество сыгранных квизов: \(gamesCount)
-            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
-            Средняя точность: \(String(format: "%.2f", totalAccuracy))%
-            """
-            
-            let viewModel = QuizResultsViewModel(
-                title: "Этот раунд окончен!",
-                text: text,
-                buttonText: "Сыграть ещё раз"
-            )
-            show(quiz: viewModel)
-        } else {
-            self.presenter.switchToNextQuestion()
-            self.questionFactory?.requestNextQuestion()
-        }
+        //        if presenter.isLastQuestion() {
+        //            statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
+        //            let gamesCount = statisticService.gamesCount
+        //            let bestGame = statisticService.bestGame
+        //            let totalAccuracy = statisticService.totalAccuracy
+        //
+        //            let text = """
+        //            Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
+        //            Количество сыгранных квизов: \(gamesCount)
+        //            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
+        //            Средняя точность: \(String(format: "%.2f", totalAccuracy))%
+        //            """
+        //
+        //            let viewModel = QuizResultsViewModel(
+        //                title: "Этот раунд окончен!",
+        //                text: text,
+        //                buttonText: "Сыграть ещё раз"
+        //            )
+        //            show(quiz: viewModel)
+        //        } else {
+        //            self.presenter.switchToNextQuestion()
+        //            self.questionFactory?.requestNextQuestion()
+        //        }
     }
     
     private func show(quiz result: QuizResultsViewModel) {
